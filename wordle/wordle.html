@@ -1,0 +1,206 @@
+<DOCTYPE html>
+    <html lang="en">
+        <head>
+            <title>Bootstrap Example</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.2/css/all.min.css" integrity="sha512-1sCRPdkRXhBV2PBLUdRb4tMg1w2YPf37qatUFeS7zlBy7jJI8Lf4VHwWfZZfpXtYSLy85pkm9GaYVYMfw5BC1A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <style>
+                body {
+                    font-family : Arial, Helvetica, sans-serif;
+                    text-align : center;
+                }
+
+                hr {
+                    width : 500px;
+                    margin : auto;
+                }
+
+                #title {
+                    font-size : 36px;
+                    font-weight : bold;
+                    letter-spacing : 2px;
+                }
+
+                #board {
+                    width : 350px;
+                    height : 420px;
+                   /* background-color : greenyellow;*/
+                    margin :  0 auto;
+                    margin-top : 3px;
+                    display : flex;
+                    flex-wrap : wrap;
+
+                }
+
+                #title {
+                    font-size : 36px;
+                    font-weight : bold;
+                    letter-spacing : 2px;
+                }
+
+                .tile {
+                    /*box*/
+                    border : 2px solid lightgray;
+                    width : 60px;
+                    height : 60px;
+                    margin : 2.5px;
+                    color : black;
+                    font-size : 36px;
+                    font-weight : bold;
+                    display : flex;
+                    justify-content : center;
+                    align-items : center;
+                }
+
+                .correct {
+                    background-color : #128c3b;
+                    color : white;
+                    border-color : white;
+                }
+
+                .present {
+                    background-color : yellow;
+                    color : white;
+                    border-color : white;
+                }
+
+                .absent {
+                    background-color : lightgrey;
+                    color : white;
+                    border-color : white;
+                }
+
+
+            </style>
+        </head>
+        <body>
+            <h1 id="title">Wordle</h1>
+            <hr>
+            <br>
+            <div id="board">
+
+            </div>
+            <br>
+            <h1 id="answer"></h1>
+            <script>
+                //number of guesses
+                const height = 6;
+
+                //length of the word
+                const width = 5;
+
+                //current guess === attempt
+                let row = 0;
+
+                //current letter for that attempt
+                let col = 0;
+
+                let gameOver = false;
+                let word = "SQUID";
+
+                window.onload = function() {
+                    initialize();
+                }
+
+                function initialize() {
+                    //create the game word
+                    for(let r = 0; r < height; r++) {
+                        for(let c = 0; c < width; c++) {
+                            let tile = document.createElement("span");
+                            tile.id = r.toString() + "-" + c.toString();
+                            tile.classList.add("tile");
+                            tile.innerText = "";
+                            document.getElementById("board").appendChild(tile);
+                        }
+                    }
+
+                    //listen for key press
+                    document.addEventListener("keyup", e => {
+                        if(gameOver) return;
+                        //alert(e.code);
+                        //if k press is included between A and Z <==> 
+                        //if the key pressed is a letter
+                        if("KeyA" <= e.code && e.code <= "KeyZ") {
+                            //if current letter is < to the length of the word
+                            if(col < width) {
+                                let currTile = document.getElementById(row.toString() + "-" + col.toString());
+                                //if currTile has no letters so <==>
+                                // check if currentTile is blank
+                                if(currTile.innerText == "") {
+                                    //so we can write the letter on the key pressed 
+                                    //we just want the letter
+                                    currTile.innerText = e.code[3];
+                                    //increment the position of the current letter
+                                    col+=1;
+                                }
+                            }
+                            //if the key pressed is the backspace key
+                        } else if(e.code == "Backspace") {
+                            //if the current column that the user
+                            // is on is between 1 include and 5
+                            //you can go back if you are between 1 and 5
+                            //and when you are 0 you cannot use backspace
+                            if(0 < col && col <= width) {
+                                //go back to one position
+                                col-=1;
+                            }
+                            //update the id by erasing the letter and put a blank instead of
+                            let currTile = document.getElementById(row.toString() + "-" + col.toString());
+                            currTile.innerText = "";
+                        } else if(e.code == "Enter") {
+                            //call up upadte function
+                            update();
+                            //go to the next attempt
+                            row +=1; //start new row
+                            col = 0; //start at position 0 from the new row
+                        }
+                        //user used all the attempt 
+                        if(!gameOver && row == height) {
+                            //alors cela déclenche la fin de partie
+                            gameOver = true;
+                            //and we display the answer so we reveal the word
+                            //choose by the computer
+                            document.getElementById("answer").innerText = word;
+                        }
+                    })
+                }
+                //this function counts the number of the
+                //letters that are correct
+                function update() {
+                    //initialise the correct letter to because
+                    //the word was not checked yet
+                    let correct = 0;
+                    //we cross through the letters of the word that the player guessed
+                    for(let c = 0; c < width; c++) {
+                        let currTile = document.getElementById(row.toString() + "-" + c.toString());
+                        let letter = currTile.innerText;
+
+                        //check if the letter is in the correct position
+                        if (word[c] == letter) {
+                            //apply the green color to the letter in the right position
+                            currTile.classList.add("correct");
+                            //and increment the counter
+                            correct +=1;
+                        //check if the letter is in the word
+                        } else if(word.includes(letter)) {
+                            //apply the yellow color to the letter which is in
+                            //the word but not at the right position
+                            currTile.classList.add("present");
+                        } else {//case where the letter is not in the word
+                            //apply the grey color to the letter
+                            currTile.classList.add("absent");
+                        }
+                        //check if the user guessed correctly all the word
+                        if(correct == width) {
+                            //trigger the end of the game
+                            gameOver = true;
+                        }
+                    }
+                }
+
+            </script>
+        </body>
